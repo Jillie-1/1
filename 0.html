@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+    <title>大富翁游戏综合页面</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #e0f7fa;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        /* 随机点名部分样式 */
+        #name-section {
+            text-align: center;
+        }
+
+        #name-list {
+            display: none;
+        }
+
+        #result {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #2196f3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #1976d2;
+        }
+
+        /* 游戏规则部分样式 */
+        #rules {
+            display: none;
+            max-width: 800px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        #rules p {
+            margin-bottom: 15px;
+        }
+
+        #rules p span {
+            display: block;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        #rules p em {
+            display: block;
+            text-align: left;
+            font-style: normal;
+            margin-top: 5px;
+        }
+
+        /* 游戏界面部分样式 */
+        #game-section {
+            display: none;
+            /* 使游戏界面居中 */
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(11, 80px);
+            grid-template-rows: repeat(11, 80px);
+            gap: 4px;
+            width: fit-content;
+            margin: 20px auto;
+            position: relative;
+        }
+
+        .grid {
+            border: 1px solid #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        #dice-container {
+            grid-column: 4 / span 4;
+            grid-row: 4 / span 4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #dice {
+            width: 120px;
+            height: 120px;
+            background-color: white;
+            border: 1px solid #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        #dice.rolling {
+            transform: rotate(360deg);
+        }
+
+        .player {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            position: absolute;
+        }
+
+        #player1 {
+            background-color: red;
+        }
+
+        #player2 {
+            background-color: blue;
+        }
+
+        #player-labels {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .player-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .player-label .player {
+            position: static;
+        }
+
+        #game-over-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border: 1px solid #ccc;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            display: none;
+        }
+
+        #result-popup {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: white;
+            padding: 20px;
+            border: 1px solid #ccc;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            display: none;
+            z-index: 10;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #result-popup button {
+            margin: 5px;
+        }
+
+        #grid-0,
+        #grid-39 {
+            background-color: green;
+        }
+
+        .city {
+            background-color: yellow;
+        }
+
+        .word-chain {
+            background-color: pink;
+        }
+
+        .you-draw-i-guess {
+            background-color: orange;
+        }
+
+        .cultural-quiz {
+            background-color: purple;
+        }
+
+        .situational-communication {
+            background-color: brown;
+        }
+
+        .tongue-twister {
+            background-color: gray;
+        }
+
+        .blank {
+            background-color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 随机点名部分 -->
+    <div id="name-section">
+        <h1>随机点名程序</h1>
+        <div id="name-list">
+            <!-- 这里可以添加更多名字 -->
+            <span>张三</span>
+            <span>李四</span>
+            <span>王五</span>
+            <span>赵六</span>
+        </div>
+        <div id="result"></div>
+        <button id="start-btn">开始点名</button>
+        <button id="next-btn" style="display: none;">下一步</button>
+    </div>
+
+    <!-- 游戏规则部分 -->
+    <div id="rules">
+        <h2>中文版大富翁游戏规则</h2>
+        <p>
+            <span>1. 游戏开始后，玩家1、2依次开始</span>
+            <em>Note: Whether the activity is completed or not affects the number of times a player can roll the dice. For example, within one round, if Player 1 fails to complete the activity while Player 2 succeeds, Player 1 will skip a round, and Player 2 can roll the dice twice in a row. Player 1 can continue to roll and move in the third round.</em>
+        </p>
+        <p>
+            <span>2. 到达城市名称时，教师将展示2 - 3个该城市的标志建筑，答对一个即算成功，答对0个即算失败，需停一回合</span>
+            <em>When reaching a city name, the teacher will show 2 - 3 landmark buildings of that city. If a player answers one correctly, it counts as a success. If a player answers none correctly, it counts as a failure, and the player has to skip a round.</em>
+        </p>
+        <p>
+            <span>3. 到达词语接龙时，由对方玩家随即说出一个词语，玩家进行接龙，5个即可，每个限时20s，若是不足5个视为失败</span>
+            <em>When reaching the word - chain section, the opposing player randomly says a word, and the current player needs to form a word - chain. Five words are required, with a 20 - second time limit for each word. If the player fails to form five words, it is considered a failure.</em>
+        </p>
+        <p>
+            <span>4. 到达你画我猜，玩家1派出两位学生，教师向“画”者展示事先准备好的文字卡，“画”者演示给“猜”者，限时1分钟，猜对3个即可</span>
+            <em>When reaching the "You Draw, I Guess" section, Player 1 sends two students. The teacher shows a pre - prepared word card to the "drawer", and the "drawer" demonstrates to the "guesser". The time limit is 1 minute, and guessing 3 words correctly counts as a success.</em>
+        </p>
+        <p>
+            <span>5. 到达文化问答时，教师进行提问，共5个答对2个即算成功</span>
+            <em>When reaching the cultural quiz section, the teacher asks questions. There are a total of 5 questions, and answering 2 correctly counts as a success.</em>
+        </p>
+        <p>
+            <span>6. 到达情景交际时，根据教师提供的情景，相应玩家每人说一句可使用的句子，不可重复</span>
+            <em>When reaching the situational communication section, according to the situation provided by the teacher, each corresponding player should say a usable sentence, and the sentences cannot be repeated.</em>
+        </p>
+        <p>
+            <span>7. 到达绕口令时，给予玩家3次机会，中途可换人，注意多人一共也只有3次机会</span>
+            <em>When reaching the tongue - twister section, the player is given 3 chances. Players can be replaced midway. Note that all players together only have 3 chances.</em>
+        </p>
+        <p>
+            <span>8. 空白格无事发生。</span>
+            <em>Nothing happens when landing on a blank grid.</em>
+        </p>
+        <p>
+            <span>9. 接近终点时需注意，本游戏设置退步运动，即若在到达终点之前最后一次投掷的步数使得玩家刚好到达终点则游戏停止，若投掷的步数使得棋子接着往起点格子走的话则设置多出多少步数从终点往回走，且棋子到达格子终点时自动停止游戏</span>
+            <em>When approaching the finish line, note that this game has a "step - back" rule. If the number of steps rolled in the last throw before reaching the finish line allows the player to exactly reach the finish line, the game stops. If the number of steps rolled causes the piece to go past the finish line towards the starting grid, the piece will move back from the finish line by the number of extra steps. The game automatically stops when the piece reaches the finish grid.</em>
+        </p>
+        <button id="start-game-btn">开始游戏</button>
+    </div>
+
+    <!-- 游戏界面部分 -->
+    <div id="game-section">
+        <h1 class="text-3xl font-bold text-center mb-4">中文版大富翁游戏</h1>
+        <div id="game-board">
+            <!-- 生成格子 -->
+            <div class="grid" id="grid-0">起点</div>
+            <!-- 上排格子 -->
+            <div class="grid city" id="grid-1">北京</div>
+            <div class="grid word-chain" id="grid-2">词语接龙</div>
+            <div class="grid you-draw-i-guess" id="grid-3">你画我猜</div>
+            <div class="grid cultural-quiz" id="grid-4">文化问答</div>
+            <div class="grid situational-communication" id="grid-5">情景交际</div>
+            <div class="grid tongue-twister" id="grid-6">绕口令</div>
+            <div class="grid blank" id="grid-7">空白格</div>
+            <div class="grid city" id="grid-8">上海</div>
+            <div class="grid word-chain" id="grid-9">词语接龙</div>
+            <!-- 右排格子 -->
+            <div class="grid you-draw-i-guess" id="grid-10">你画我猜</div>
+            <div class="grid cultural-quiz" id="grid-11">文化问答</div>
+            <div class="grid situational-communication" id="grid-12">情景交际</div>
+            <div class="grid tongue-twister" id="grid-13">绕口令</div>
+            <div class="grid blank" id="grid-14">空白格</div>
+            <div class="grid city" id="grid-15">广州</div>
+            <div class="grid word-chain" id="grid-16">词语接龙</div>
+            <div class="grid you-draw-i-guess" id="grid-17">你画我猜</div>
+            <div class="grid cultural-quiz" id="grid-18">文化问答</div>
+            <!-- 下排格子 -->
+            <div class="grid situational-communication" id="grid-19">情景交际</div>
+            <div class="grid tongue-twister" id="grid-20">绕口令</div>
+            <div class="grid blank" id="grid-21">空白格</div>
+            <div class="grid city" id="grid-22">深圳</div>
+            <div class="grid word-chain" id="grid-23">词语接龙</div>
+            <div class="grid you-draw-i-guess" id="grid-24">你画我猜</div>
+            <div class="grid cultural-quiz" id="grid-25">文化问答</div>
+            <div class="grid situational-communication" id="grid-26">情景交际</div>
+            <div class="grid tongue-twister" id="grid-27">绕口令</div>
+            <div class="grid blank" id="grid-28">空白格</div>
+            <!-- 左排格子 -->
+            <div class="grid city" id="grid-29">成都</div>
+            <div class="grid word-chain" id="grid-30">词语接龙</div>
+            <div class="grid you-draw-i-guess" id="grid-31">你画我猜</div>
+            <div class="grid cultural-quiz" id="grid-32">文化问答</div>
+            <div class="grid situational-communication" id="grid-33">情景交际</div>
+            <div class="grid tongue-twister" id="grid-34">绕口令</div>
+            <div class="grid blank" id="grid-35">空白格</div>
+            <div class="grid city" id="grid-36">杭州</div>
+            <div class="grid word-chain" id="grid-37">词语接龙</div>
+            <div class="grid city" id="grid-38">重庆</div>
+            <div class="grid" id="grid-39">终点</div>
+            <div id="dice-container">
+                <div id="dice">🎲</div>
+            </div>
+        </div>
+        <div id="player1" class="player"></div>
+        <div id="player2" class="player"></div>
+        <div id="player-labels">
+            <div class="player-label">
+                <div class="player" style="background-color: red;"></div>
+                <span>玩家 1</span>
+            </div>
+            <div class="player-label">
+                <div class="player" style="background-color: blue;"></div>
+                <span>玩家 2</span>
+            </div>
+        </div>
+        <div id="game-over-message">
+            <p id="winner-message"></p>
+        </div>
+        <div id="result-popup">
+            <p>请选择结果：</p>
+            <button id="success-btn">成功</button>
+            <button id="fail-btn">失败</button>
+        </div>
+        <audio id="game-music" src="https://example.com/your-music.mp3" autoplay loop></audio>
+    </div>
+
+    <script>
+        const nameList = document.getElementById('name-list').children;
+        const result = document.getElementById('result');
+        const startBtn = document.getElementById('start-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const rules = document.getElementById('rules');
+        const startGameBtn = document.getElementById('start-game-btn');
+        const nameSection = document.getElementById('name-section');
+        const gameSection = document.getElementById('game-section');
+
+        let intervalId;
+
+        startBtn.addEventListener('click', () => {
+            startBtn.disabled = true;
+            intervalId = setInterval(() => {
+                const randomIndex = Math.floor(Math.random() * nameList.length);
+                result.textContent = nameList[randomIndex].textContent;
+            }, 100);
+            setTimeout(() => {
+                clearInterval(intervalId);
+                nextBtn.style.display = 'block';
+            }, 3000);
+        });
+
+        nextBtn.addEventListener('click', () => {
+            nameSection.style.display = 'none';
+            rules.style.display = 'block';
+        });
+
+        startGameBtn.addEventListener('click', () => {
+            rules.style.display = 'none';
+            gameSection.style.display = 'flex';
+
+            const dice = document.getElementById('dice');
+            const player1 = document.getElementById('player1');
+            const player2 = document.getElementById('player2');
+            let currentPlayer = 1;
+            let player1Position = 0;
+            let player2Position = 0;
+            const gameOverMessage = document.getElementById('game-over-message');
+            const winnerMessage = document.getElementById('winner-message');
+            const resultPopup = document.getElementById('result-popup');
+            const successBtn = document.getElementById('success-btn');
+            const failBtn = document.getElementById('fail-btn');
+            const gameMusic = document.getElementById('game-music');
+            let isPlayerPaused = { 1: false, 2: false };
+
+            function rollDice() {
+                if (gameOverMessage.style.display === 'block' || isPlayerPaused[currentPlayer]) {
+                    isPlayerPaused[currentPlayer] = false;
+                    currentPlayer = currentPlayer === 1 ? 2 : 1;
+                    return;
+                }
+                dice.classList.add('rolling');
+                setTimeout(() => {
+                    dice.classList.remove('rolling');
+                    const result = Math.floor(Math.random() * 6) + 1;
+                    dice.textContent = result;
+                    if (currentPlayer === 1) {
+                        player1Position = calculateNewPosition(player1Position, result);
+                        movePlayer(player1, player1Position);
+                        if (player1Position === 39) {
+                            endGame(1);
+                            return;
+                        }
+                    } else {
+                        player2Position = calculateNewPosition(player2Position, result);
+                        movePlayer(player2, player2Position);
+                        if (player2Position === 39) {
+                            endGame(2);
+                            return;
+                        }
+                    }
+                    resultPopup.style.display = 'flex';
+                }, 300);
+            }
+
+            function calculateNewPosition(currentPosition, steps) {
+                if (currentPosition + steps <= 39) {
+                    return currentPosition + steps;
+                } else {
+                    const overSteps = (currentPosition + steps) - 39;
+                    return 39 - overSteps;
+                }
+            }
+
+            function movePlayer(player, position) {
+                const grid = document.getElementById(`grid-${position}`);
+                const rect = grid.getBoundingClientRect();
+                player.style.left = rect.left + rect.width / 2 - player.offsetWidth / 2 + 'px';
+                player.style.top = rect.top + rect.height / 2 - player.offsetHeight / 2 + 'px';
+            }
+
+            function handleSuccess() {
+                resultPopup.style.display = 'none';
+                currentPlayer = currentPlayer === 1 ? 2 : 1;
+            }
+
+            function handleFail() {
+                resultPopup.style.display = 'none';
+                isPlayerPaused[currentPlayer] = true;
+                currentPlayer = currentPlayer === 1 ? 2 : 1;
+            }
+
+            function endGame(winner) {
+                gameOverMessage.style.display = 'block';
+                winnerMessage.textContent = `玩家 ${winner} 获胜！游戏结束。`;
+                dice.removeEventListener('click', rollDice);
+                gameMusic.pause();
+            }
+
+            dice.addEventListener('click', rollDice);
+            successBtn.addEventListener('click', handleSuccess);
+            failBtn.addEventListener('click', handleFail);
+
+            movePlayer(player1, player1Position);
+            movePlayer(player2, player2Position);
+        });
+    </script>
+</body>
+
+</html>    
